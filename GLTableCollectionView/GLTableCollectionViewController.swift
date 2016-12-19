@@ -23,6 +23,9 @@ class GLTableCollectionViewController: UITableViewController, UICollectionViewDa
 
 	var colorsDict: [Int: [UIColor]] = [:]
 
+	/// Set true to enable UICollectionViews scroll pagination
+	var paginationEnabled: Bool = true
+
 	override func viewDidLoad() {
 		super.viewDidLoad()
 
@@ -38,9 +41,13 @@ class GLTableCollectionViewController: UITableViewController, UICollectionViewDa
 			var colorsArray: [UIColor] = []
 
 			for _ in 0..<numberOfCollectionItems {
-				let randomRed: CGFloat = CGFloat(arc4random_uniform(256))
+				var randomRed: CGFloat = CGFloat(arc4random_uniform(256))
 				let randomGreen: CGFloat = CGFloat(arc4random_uniform(256))
 				let randomBlue: CGFloat = CGFloat(arc4random_uniform(256))
+
+				if (randomRed == 255.0 && randomGreen == 255.0 && randomBlue == 255.0) {
+					randomRed = CGFloat(arc4random_uniform(128))
+				}
 
 				colorsArray.append(UIColor(red: randomRed/255.0, green: randomGreen/255.0, blue: randomBlue/255.0, alpha: 1.0))
 			}
@@ -65,18 +72,18 @@ class GLTableCollectionViewController: UITableViewController, UICollectionViewDa
 	}
 
 	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-		// As you can see below instead of having a single cellIdentifier for
-		// each type of UITableViewCells, as you would do with normally, we will
-		// have multiple IDs each related to a indexPath section. Doing so the
-		// UITableViewCells will still be recycled but it will be done only with
-		// dequeueReusableCell of a given section.
+		// Instead of having a single cellIdentifier for each type of
+		// UITableViewCells, like in a regular implementation, we will have
+		// multiple cellIDs each related to a precise indexPath section.
+		// Doing so the UITableViewCells will still be recycled but only with
+		// dequeueReusableCell of that section.
 		//
 		// For example the cellIdentifier for section 4 cells will be:
 		// "tableViewCellID_section_#3"
 		// dequeueReusableCell will only reuse previous UITableViewCells with
 		// the same cellIdentifier instead of using any UITableViewCell as a
 		// regular UITableView would do, this is necessary because every cell
-		// will have a different UICollectionView and UICollectionViewCells in
+		// will have a different UICollectionView with UICollectionViewCells in
 		// it and UITableView reuse won't work as expected giving back wrong
 		// cells.
 		var cell: GLCollectionTableViewCell? = tableView.dequeueReusableCell(withIdentifier: tableCellID + indexPath.section.description) as? GLCollectionTableViewCell
@@ -86,6 +93,7 @@ class GLTableCollectionViewController: UITableViewController, UICollectionViewDa
 
 			// Configure the cell...
 			cell!.selectionStyle = .none
+			cell!.collectionViewScrollPagination = paginationEnabled
 		}
 
 		return cell!
@@ -130,10 +138,8 @@ class GLTableCollectionViewController: UITableViewController, UICollectionViewDa
 	func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 		let cell: GLIndexedCollectionViewCell = collectionView.dequeueReusableCell(withReuseIdentifier: collectionCellID, for: indexPath) as! GLIndexedCollectionViewCell
 
-		let indexedCollection: GLIndexedCollectionView = collectionView as! GLIndexedCollectionView
-
 		// Configure the cell...
-		cell.backgroundColor = colorsDict[indexedCollection.indexPath.section]?[indexPath.row]
+		cell.backgroundColor = colorsDict[(collectionView as! GLIndexedCollectionView).indexPath.section]?[indexPath.row]
 
 		return cell
 	}
